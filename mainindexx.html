@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Equipment Check</title>
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+        }
+
+        #equipment-check-box {
+            max-width: 600px;
+            margin: 40px auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            position: relative;
+        }
+
+        #equipment-check-header {
+            background-color: #1abc9c;
+            color: #fff;
+            font-size: 18px;
+            padding: 10px;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #equipment-check-content {
+            padding: 10px;
+            color: #333;
+            display: flex;
+            align-items: stretch;
+            position: relative;
+        }
+
+        #equipment-check-text {
+            flex: 1;
+        }
+
+        #equipment-check-text p {
+            margin-bottom: 10px;
+        }
+
+        #equipment-check-permissions {
+            flex: 1;
+        }
+
+        #equipment-check-content p {
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+
+        #equipment-check-content .circle-container {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: middle;
+            background-color: #e74c3c;
+            transition: background-color 0.3s ease;
+        }
+
+        #equipment-check-content .success-circle {
+            background-color: #2ecc71;
+        }
+
+        #equipment-check-content button {
+            margin-top: 20px;
+            padding: 5px 10px; 
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            position: absolute; 
+            bottom: 40px; 
+            right: 10px; 
+        }
+
+        #equipment-check-content button:hover {
+            background-color: #45a049;
+        }
+
+        #equipment-check-content button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        #equipment-check-content .hidden {
+            display: none;
+        }
+
+        #photo-dialog {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        #photo-dialog h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        #photo-dialog video {
+            display: block;
+            width: 100%;
+            transform: scaleX(-1);
+            margin-bottom: 10px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        #photo-dialog .photo-container {
+            text-align: center;
+            position: relative;
+            margin-bottom: 0;
+            line-height: 0;
+        }
+
+        #photo-dialog .photo-container img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        #photo-dialog .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #photo-dialog button {
+            margin: 0 5px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        #photo-dialog button:hover {
+            background-color: #45a049;
+        }
+    
+    </style>
+</head>
+<body>
+    <div id="equipment-check-box">
+        <div id="equipment-check-header">
+            Equipment Check
+        </div>
+        <div id="equipment-check-content">
+            <div id="equipment-check-text">
+                <p>Please wait while the system checks your computer and the network so that possible technical issues do not interfere with the exam.</p>
+            </div>
+            <div id="equipment-check-permissions">
+                <p><span class="circle-container error-circle" id="microphone-circle"></span> Microphone</p>
+                <p><span class="circle-container error-circle" id="video-circle"></span> Video</p>
+                <p><span class="circle-container error-circle" id="audio-circle"></span> Audio</p>
+                <p><span class="circle-container error-circle" id="screen-sharing-circle"></span> Screen Sharing</p>
+                <p><span class="circle-container error-circle" id="network-circle"></span> Network</p>
+            </div>
+            <button id="nextButton" disabled>Next</button>
+        </div>
+    </div>
+
+    <div id="photo-dialog">
+        <h2>Take Your Photo</h2>
+        <div class="photo-container">
+            <video id="video-element" autoplay></video>
+            <button id="capture-button">Capture</button>
+        </div>
+        <div class="button-container">
+            <button id="retake-button" style="display: none;">Retake</button>
+            <button id="continue-button" style="display: none;">Continue</button>
+            
+        </div>
+    </div>
+
+    <script>
+        
+        const nextButton = document.getElementById('nextButton');
+        nextButton.addEventListener('click', function() {
+            document.getElementById('equipment-check-box').style.display = 'none';
+            document.getElementById('photo-dialog').style.display = 'block';
+            startVideo();
+        });
+    </script>
+</body>
+</html>
+
+
+
+    <script>
+        const accessDialog = document.getElementById('access-dialog');
+        const photoDialog = document.getElementById('photo-dialog');
+        const captureButton = document.getElementById('capture-button');
+        const retakeButton = document.getElementById('retake-button');
+        const continueButton = document.getElementById('continue-button');
+        const videoElement = document.getElementById('video-element');
+        const photoContainer = document.querySelector('#photo-dialog .photo-container');
+        const buttonContainer = document.querySelector('#photo-dialog .button-container');
+        let capturedPhoto = null;
+
+        function checkMicrophone() {
+            return navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    document.getElementById('microphone-circle').classList.add('success-circle');
+                    checkAllPermissions();
+                })
+                .catch(function(error) {
+                    document.getElementById('microphone-circle').classList.add('error-circle');
+                    checkAllPermissions();
+                });
+        }
+
+        function checkVideo() {
+            return navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    document.getElementById('video-circle').classList.add('success-circle');
+                    checkAllPermissions();
+                })
+                .catch(function(error) {
+                    document.getElementById('video-circle').classList.add('error-circle');
+                    checkAllPermissions();
+                });
+        }
+
+        function checkAudio() {
+            return navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    document.getElementById('audio-circle').classList.add('success-circle');
+                    checkAllPermissions();
+                })
+                .catch(function(error) {
+                    document.getElementById('audio-circle').classList.add('error-circle');
+                    checkAllPermissions();
+                });
+        }
+
+        function checkScreenSharing() {
+            if (navigator.mediaDevices.getDisplayMedia) {
+                document.getElementById('screen-sharing-circle').classList.add('success-circle');
+                checkAllPermissions();
+            } else {
+                document.getElementById('screen-sharing-circle').classList.add('error-circle');
+                checkAllPermissions();
+            }
+        }
+
+        function checkNetworkConnection() {
+            const networkCircleElement = document.getElementById('network-circle');
+            const isOnline = navigator.onLine;
+
+            if (isOnline) {
+                networkCircleElement.classList.add('success-circle');
+            } else {
+                networkCircleElement.classList.add('error-circle');
+            }
+
+            checkAllPermissions();
+        }
+
+        function checkAllPermissions() {
+            const microphoneAccess = document.getElementById('microphone-circle').classList.contains('success-circle');
+            const videoAccess = document.getElementById('video-circle').classList.contains('success-circle');
+            const audioAccess = document.getElementById('audio-circle').classList.contains('success-circle');
+            const screenSharingSupport = document.getElementById('screen-sharing-circle').classList.contains('success-circle');
+            const networkAccess = document.getElementById('network-circle').classList.contains('success-circle');
+
+            const nextButton = document.getElementById('nextButton');
+            if (microphoneAccess && videoAccess && audioAccess && screenSharingSupport && networkAccess) {
+                nextButton.removeAttribute('disabled');
+            } else {
+                nextButton.setAttribute('disabled', 'disabled');
+            }
+        }
+
+        captureButton.addEventListener('click', function() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            context.scale(-1, 1);
+            context.drawImage(videoElement, -canvas.width, 0, canvas.width, canvas.height);
+            const imageSrc = canvas.toDataURL('image/png');
+
+            videoElement.srcObject = null;
+
+            capturedPhoto = document.createElement('img');
+            capturedPhoto.src = imageSrc;
+            photoContainer.innerHTML = '';
+            photoContainer.appendChild(capturedPhoto);
+
+            buttonContainer.style.display = 'flex';
+            retakeButton.style.display = 'inline-block';
+            continueButton.style.display = 'inline-block';
+            captureButton.style.display = 'none';
+        });
+
+     
+        retakeButton.addEventListener('click', function() {
+          capturedPhoto = null;
+          buttonContainer.style.display = 'none';
+          captureButton.style.display = 'inline-block';
+          startVideo();
+        });
+
+        
+        continueButton.addEventListener('click', function() {
+        
+        window.location.href = "./index.html";
+            
+            
+        });
+
+        function startVideo() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    videoElement.srcObject = stream;
+                })
+                .catch(function(error) {
+                    console.log('Error starting video stream:', error);
+                });
+        }
+
+        Promise.all([
+            checkMicrophone(),
+            checkVideo(),
+            checkAudio(),
+            checkScreenSharing(),
+            checkNetworkConnection()
+        ]).then(() => {
+        const nextButton = document.getElementById('nextButton');
+        nextButton.addEventListener('click', function() {
+                accessDialog.classList.add('hidden');
+                photoDialog.style.display = 'block';
+                startVideo();
+                retakeButton.style.display = 'none';
+                continueButton.style.display = 'none';
+            });
+        }).catch((error) => {
+            console.error('Error while checking permissions:', error);
+        });
+    </script>
+</body>
+</html>
