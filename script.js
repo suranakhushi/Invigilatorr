@@ -52,21 +52,21 @@ document.addEventListener('DOMContentLoaded', () => {
       setInterval(async () => {
         const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
         const resizedDetections = faceapi.resizeResults(detections, displaySize);
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the main canvas before drawing
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
 
         if (resizedDetections.length > 0) {
-          canvasContainer.style.border = '4px solid green'; // Change the canvas outline color to green
+          canvasContainer.style.border = '4px solid green'; 
 
           isFaceVisible = true;
         } else {
-          canvasContainer.style.border = '4px solid red'; // Change the canvas outline color to red
+          canvasContainer.style.border = '4px solid red'; 
 
           if (isFaceVisible) {
             showError('Face not visible or not looking into the camera. Please adjust your position.');
             isFaceVisible = false;
           }
         }
-      }, 10000); // Check every 10 seconds
+      }, 10000);
     }
   }
 
@@ -75,9 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
       if (detections.length === 0) {
         showError('Face not visible or not looking into the camera. Please adjust your position.');
-        canvasContainer.style.border = '4px solid red'; // Change the canvas outline to red
+        canvasContainer.style.border = '4px solid red'; 
       } else {
-        // Clear the error message and border when face is detected
+        
         errorMessage.style.display = 'none';
         canvasContainer.style.border = '4px solid green'; // Change the canvas outline to green
       }
@@ -86,18 +86,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  checkFaceVisibility(); // Initial check
-
-  // Helper function to show error message in chat box format
+  checkFaceVisibility();
   function showError(message) {
     errorMessage.innerHTML = message;
     errorMessage.style.display = 'block';
-    errorMessage.classList.add('chatbox'); // Add the 'chatbox' class to the error message
+    errorMessage.classList.add('chatbox'); 
 
     setTimeout(() => {
       errorMessage.style.display = 'none';
-      errorMessage.classList.remove('chatbox'); // Remove the 'chatbox' class after hiding the message
-    }, 1000); // Hide the error message after 10 seconds
+      errorMessage.classList.remove('chatbox'); 
+    }, 1000); 
   }
 
 async function checkBackgroundNoise(stream) {
@@ -226,5 +224,5 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       });
 
     startVideo();
-    checkFaceVisibility(); // Initial check
+    checkFaceVisibility();
   });
