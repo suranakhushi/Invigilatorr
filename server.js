@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const path = require('path'); 
 const httpServer = require('http').createServer(app);
 const io = require('socket.io')(httpServer);
 app.use(express.static(path.join(__dirname, '/Face-Detection-Javascript-master')));
