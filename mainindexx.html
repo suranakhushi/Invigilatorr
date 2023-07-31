@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Equipment Check</title>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <style>
         
         body {
@@ -214,6 +215,7 @@
 
 
     <script>
+        const socket = io('http://localhost:5500');
         const accessDialog = document.getElementById('access-dialog');
         const photoDialog = document.getElementById('photo-dialog');
         const captureButton = document.getElementById('capture-button');
@@ -290,11 +292,11 @@
             const screenSharingSupport = document.getElementById('screen-sharing-circle').classList.contains('success-circle');
             const networkAccess = document.getElementById('network-circle').classList.contains('success-circle');
 
-            const nextButton = document.getElementById('nextButton');
+        const nextButton = document.getElementById('nextButton');
             if (microphoneAccess && videoAccess && audioAccess && screenSharingSupport && networkAccess) {
-                nextButton.removeAttribute('disabled');
+                 nextButton.removeAttribute('disabled');
             } else {
-                nextButton.setAttribute('disabled', 'disabled');
+                 nextButton.setAttribute('disabled', 'disabled');
             }
         }
 
@@ -328,14 +330,14 @@
           startVideo();
         });
 
-        
         continueButton.addEventListener('click', function() {
-        
-        window.location.href = "./index.html";
-            
-            
-        });
-
+          if (capturedPhoto) 
+          {
+            socket.emit('photo-captured', capturedPhoto.src);
+            window.location.href = "./index.html";
+          }
+ 
+          });
         function startVideo() {
             navigator.mediaDevices.getUserMedia({ video: true })
                 .then(function(stream) {
@@ -354,7 +356,8 @@
             checkNetworkConnection()
         ]).then(() => {
         const nextButton = document.getElementById('nextButton');
-        nextButton.addEventListener('click', function() {
+        nextButton.addEventListener('click', function(){
+          
                 accessDialog.classList.add('hidden');
                 photoDialog.style.display = 'block';
                 startVideo();

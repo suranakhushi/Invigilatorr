@@ -88,89 +88,94 @@
       integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+"
       crossorigin="anonymous"
     ></script>
-    <script src="script.js"></script>
-
     <script>
-      const io = require('socket.io-client')
-      const socket = io('http://127.0.0.1:5500')
-      let videoStream, audioStream, screenStream
-      let mediaRecorderVideo, mediaRecorderAudio, mediaRecorderScreen
-      let videoUrl, audioUrl, screenUrl
+    const socket = io('http://localhost:5500');
+    let cameraStream = null;
+    let audioStream = null;
 
-      async function startRecording() {
-        try {
-          videoStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          })
-          audioStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          })
-          screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,
-            audio: true,
-          })
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const canvasContainer = document.getElementById('canvas-container');
+    const errorMessage = document.getElementById('error-message');
+    socket.on('error-message', (message) => 
+    {
+    const errorMessage = document.getElementById('error-message');
+    if (errorMessage) {
+      errorMessage.innerHTML = message;
+      errorMessage.style.display = 'block';
+      errorMessage.classList.add('chatbox');
 
-          mediaRecorderVideo = new MediaRecorder(videoStream)
-          mediaRecorderAudio = new MediaRecorder(audioStream)
-          mediaRecorderScreen = new MediaRecorder(screenStream)
-
-          mediaRecorderVideo.ondataavailable = handleVideoDataAvailable
-          mediaRecorderAudio.ondataavailable = handleAudioDataAvailable
-          mediaRecorderScreen.ondataavailable = handleScreenDataAvailable
-
-          mediaRecorderVideo.start()
-          mediaRecorderAudio.start()
-          mediaRecorderScreen.start()
-        } catch (error) {
-          console.error('Error accessing media devices:', error)
-          showError('Error accessing media devices: ' + error.message)
-        }
+      if (!isPopSoundPlayed) {
+        playPopSound();
       }
 
-      function handleVideoDataAvailable(event) {
-        if (event.data.size > 0) {
-          videoUrl = URL.createObjectURL(
-            new Blob([event.data], { type: 'video/webm' })
-          )
+      setTimeout(() => {
+        errorMessage.style.display = 'none';
+        errorMessage.classList.remove('chatbox');
+      }, 10000);
+    }
+  });
+  socket.on('canvas-outline-color', (color) => 
+  {
+    const canvasContainer = document.getElementById('canvas-container');
+    if (canvasContainer) {
+      canvasContainer.style.border = `4px solid ${color}`;
+    }
+  });
+    async function startVideo() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (video) {
+          video.srcObject = stream;
+          video.addEventListener('loadedmetadata', () => {
+          });
+          cameraStream = stream;
         }
+      } catch (err) {
+        console.error('Error accessing the camera: ', err);
+        showError('Error accessing the camera: ' + err.message);
       }
+    }
+    async function startSendingAudioStream() {
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioContext = new AudioContext();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(audioStream);
+        microphone.connect(analyser);
 
-      function handleAudioDataAvailable(event) {
-        if (event.data.size > 0) {
-          audioUrl = URL.createObjectURL(
-            new Blob([event.data], { type: 'audio/webm' })
-          )
-        }
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const sendAudioData = () => {
+          analyser.getByteFrequencyData(dataArray);
+          socket.emit('audio-stream', dataArray);
+          requestAnimationFrame(sendAudioData);
+        };
+
+        sendAudioData();
+      } catch (err) {
+        console.error('Error accessing the microphone: ', err);
+        showError('Error accessing the microphone: ' + err.message);
       }
+    }
+    async function startSendingScreenStream() {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        const screenVideoTrack = screenStream.getVideoTracks()[0];
+        const screenAudioTrack = screenStream.getAudioTracks()[0];
 
-      function handleScreenDataAvailable(event) {
-        if (event.data.size > 0) {
-          screenUrl = URL.createObjectURL(
-            new Blob([event.data], { type: 'video/webm' })
-          )
-        }
+        socket.emit('screen-stream', screenVideoTrack);
+        socket.emit('audio-stream', screenAudioTrack);
+      } catch (err) {
+        console.error('Error accessing the screen: ', err);
+        showError('Error accessing the screen: ' + err.message);
       }
-
-      async function stopRecording() {
-        if (mediaRecorderVideo.state !== 'inactive') {
-          mediaRecorderVideo.stop()
-        }
-        if (mediaRecorderAudio.state !== 'inactive') {
-          mediaRecorderAudio.stop()
-        }
-        if (mediaRecorderScreen.state !== 'inactive') {
-          mediaRecorderScreen.stop()
-        }
-
-        // Send the recorded URLs to the server using socket.io
-        socket.emit('video', videoUrl)
-        socket.emit('audio', audioUrl)
-        socket.emit('screen', screenUrl)
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        startRecording()
-      })
+    }
+    startVideo();
+    startSendingAudioStream();
+    startSendingScreenStream()
     </script>
   </body>
 </html>
