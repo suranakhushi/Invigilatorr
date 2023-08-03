@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Equipment Check</title>
     <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
     <style>
-        
         body {
             font-family: Arial, sans-serif;
             background-color: #f3f3f3;
@@ -77,7 +77,7 @@
 
         #equipment-check-content button {
             margin-top: 20px;
-            padding: 5px 10px; 
+            padding: 5px 10px;
             background-color: #4CAF50;
             color: #fff;
             border: none;
@@ -85,9 +85,9 @@
             cursor: pointer;
             font-size: 16px;
             transition: background-color 0.3s ease;
-            position: absolute; 
-            bottom: 40px; 
-            right: 10px; 
+            position: absolute;
+            bottom: 40px;
+            right: 10px;
         }
 
         #equipment-check-content button:hover {
@@ -164,9 +164,9 @@
         #photo-dialog button:hover {
             background-color: #45a049;
         }
-    
     </style>
 </head>
+
 <body>
     <div id="equipment-check-box">
         <div id="equipment-check-header">
@@ -174,7 +174,8 @@
         </div>
         <div id="equipment-check-content">
             <div id="equipment-check-text">
-                <p>Please wait while the system checks your computer and the network so that possible technical issues do not interfere with the exam.</p>
+                <p>Please wait while the system checks your computer and the network so that possible technical issues
+                    do not interfere with the exam.</p>
             </div>
             <div id="equipment-check-permissions">
                 <p><span class="circle-container error-circle" id="microphone-circle"></span> Microphone</p>
@@ -196,177 +197,181 @@
         <div class="button-container">
             <button id="retake-button" style="display: none;">Retake</button>
             <button id="continue-button" style="display: none;">Continue</button>
-            
+
         </div>
     </div>
 
     <script>
-        
+
         const nextButton = document.getElementById('nextButton');
-        nextButton.addEventListener('click', function() {
+        nextButton.addEventListener('click', function () {
             document.getElementById('equipment-check-box').style.display = 'none';
             document.getElementById('photo-dialog').style.display = 'block';
             startVideo();
         });
     </script>
 </body>
+
 </html>
 
 
 
-    <script>
-        const socket = io('http://localhost:5500');
-        const accessDialog = document.getElementById('access-dialog');
-        const photoDialog = document.getElementById('photo-dialog');
-        const captureButton = document.getElementById('capture-button');
-        const retakeButton = document.getElementById('retake-button');
-        const continueButton = document.getElementById('continue-button');
-        const videoElement = document.getElementById('video-element');
-        const photoContainer = document.querySelector('#photo-dialog .photo-container');
-        const buttonContainer = document.querySelector('#photo-dialog .button-container');
-        let capturedPhoto = null;
+<script>
+    const socket = io('http://localhost:5500');
+    socket.on('hello from server', (...args) => {
+        console.log('hello from server', ...args)
+    })
+    const accessDialog = document.getElementById('access-dialog');
+    const photoDialog = document.getElementById('photo-dialog');
+    const captureButton = document.getElementById('capture-button');
+    const retakeButton = document.getElementById('retake-button');
+    const continueButton = document.getElementById('continue-button');
+    const videoElement = document.getElementById('video-element');
+    const photoContainer = document.querySelector('#photo-dialog .photo-container');
+    const buttonContainer = document.querySelector('#photo-dialog .button-container');
+    let capturedPhoto = null;
 
-        function checkMicrophone() {
-            return navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(function(stream) {
-                    document.getElementById('microphone-circle').classList.add('success-circle');
-                    checkAllPermissions();
-                })
-                .catch(function(error) {
-                    document.getElementById('microphone-circle').classList.add('error-circle');
-                    checkAllPermissions();
-                });
-        }
-
-        function checkVideo() {
-            return navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function(stream) {
-                    document.getElementById('video-circle').classList.add('success-circle');
-                    checkAllPermissions();
-                })
-                .catch(function(error) {
-                    document.getElementById('video-circle').classList.add('error-circle');
-                    checkAllPermissions();
-                });
-        }
-
-        function checkAudio() {
-            return navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(function(stream) {
-                    document.getElementById('audio-circle').classList.add('success-circle');
-                    checkAllPermissions();
-                })
-                .catch(function(error) {
-                    document.getElementById('audio-circle').classList.add('error-circle');
-                    checkAllPermissions();
-                });
-        }
-
-        function checkScreenSharing() {
-            if (navigator.mediaDevices.getDisplayMedia) {
-                document.getElementById('screen-sharing-circle').classList.add('success-circle');
+    function checkMicrophone() {
+        return navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function (stream) {
+                document.getElementById('microphone-circle').classList.add('success-circle');
                 checkAllPermissions();
-            } else {
-                document.getElementById('screen-sharing-circle').classList.add('error-circle');
+            })
+            .catch(function (error) {
+                document.getElementById('microphone-circle').classList.add('error-circle');
                 checkAllPermissions();
-            }
-        }
+            });
+    }
 
-        function checkNetworkConnection() {
-            const networkCircleElement = document.getElementById('network-circle');
-            const isOnline = navigator.onLine;
+    function checkVideo() {
+        return navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                document.getElementById('video-circle').classList.add('success-circle');
+                checkAllPermissions();
+            })
+            .catch(function (error) {
+                document.getElementById('video-circle').classList.add('error-circle');
+                checkAllPermissions();
+            });
+    }
 
-            if (isOnline) {
-                networkCircleElement.classList.add('success-circle');
-            } else {
-                networkCircleElement.classList.add('error-circle');
-            }
+    function checkAudio() {
+        return navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function (stream) {
+                document.getElementById('audio-circle').classList.add('success-circle');
+                checkAllPermissions();
+            })
+            .catch(function (error) {
+                document.getElementById('audio-circle').classList.add('error-circle');
+                checkAllPermissions();
+            });
+    }
 
+    function checkScreenSharing() {
+        if (navigator.mediaDevices.getDisplayMedia) {
+            document.getElementById('screen-sharing-circle').classList.add('success-circle');
+            checkAllPermissions();
+        } else {
+            document.getElementById('screen-sharing-circle').classList.add('error-circle');
             checkAllPermissions();
         }
+    }
 
-        function checkAllPermissions() {
-            const microphoneAccess = document.getElementById('microphone-circle').classList.contains('success-circle');
-            const videoAccess = document.getElementById('video-circle').classList.contains('success-circle');
-            const audioAccess = document.getElementById('audio-circle').classList.contains('success-circle');
-            const screenSharingSupport = document.getElementById('screen-sharing-circle').classList.contains('success-circle');
-            const networkAccess = document.getElementById('network-circle').classList.contains('success-circle');
+    function checkNetworkConnection() {
+        const networkCircleElement = document.getElementById('network-circle');
+        const isOnline = navigator.onLine;
 
-        const nextButton = document.getElementById('nextButton');
-            if (microphoneAccess && videoAccess && audioAccess && screenSharingSupport && networkAccess) {
-                 nextButton.removeAttribute('disabled');
-            } else {
-                 nextButton.setAttribute('disabled', 'disabled');
-            }
+        if (isOnline) {
+            networkCircleElement.classList.add('success-circle');
+        } else {
+            networkCircleElement.classList.add('error-circle');
         }
 
-        captureButton.addEventListener('click', function() {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
-            context.scale(-1, 1);
-            context.drawImage(videoElement, -canvas.width, 0, canvas.width, canvas.height);
-            const imageSrc = canvas.toDataURL('image/png');
+        checkAllPermissions();
+    }
 
-            videoElement.srcObject = null;
+    function checkAllPermissions() {
+        const microphoneAccess = document.getElementById('microphone-circle').classList.contains('success-circle');
+        const videoAccess = document.getElementById('video-circle').classList.contains('success-circle');
+        const audioAccess = document.getElementById('audio-circle').classList.contains('success-circle');
+        const screenSharingSupport = document.getElementById('screen-sharing-circle').classList.contains('success-circle');
+        const networkAccess = document.getElementById('network-circle').classList.contains('success-circle');
 
-            capturedPhoto = document.createElement('img');
-            capturedPhoto.src = imageSrc;
-            photoContainer.innerHTML = '';
-            photoContainer.appendChild(capturedPhoto);
+        const nextButton = document.getElementById('nextButton');
+        if (microphoneAccess && videoAccess && audioAccess && screenSharingSupport && networkAccess) {
+            nextButton.removeAttribute('disabled');
+        } else {
+            nextButton.setAttribute('disabled', 'disabled');
+        }
+    }
 
-            buttonContainer.style.display = 'flex';
-            retakeButton.style.display = 'inline-block';
-            continueButton.style.display = 'inline-block';
-            captureButton.style.display = 'none';
-        });
+    captureButton.addEventListener('click', function () {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        context.scale(-1, 1);
+        context.drawImage(videoElement, -canvas.width, 0, canvas.width, canvas.height);
+        const imageSrc = canvas.toDataURL('image/png');
 
-     
-        retakeButton.addEventListener('click', function() {
-          capturedPhoto = null;
-          buttonContainer.style.display = 'none';
-          captureButton.style.display = 'inline-block';
-          startVideo();
-        });
+        videoElement.srcObject = null;
 
-        continueButton.addEventListener('click', function() {
-          if (capturedPhoto) 
-          {
+        capturedPhoto = document.createElement('img');
+        capturedPhoto.src = imageSrc;
+        photoContainer.innerHTML = '';
+        photoContainer.appendChild(capturedPhoto);
+
+        buttonContainer.style.display = 'flex';
+        retakeButton.style.display = 'inline-block';
+        continueButton.style.display = 'inline-block';
+        captureButton.style.display = 'none';
+    });
+
+
+    retakeButton.addEventListener('click', function () {
+        capturedPhoto = null;
+        buttonContainer.style.display = 'none';
+        captureButton.style.display = 'inline-block';
+        startVideo();
+    });
+
+    continueButton.addEventListener('click', function () {
+        if (capturedPhoto) {
             socket.emit('photo-captured', capturedPhoto.src);
             window.location.href = "./index.html";
-          }
- 
-          });
-        function startVideo() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(function(stream) {
-                    videoElement.srcObject = stream;
-                })
-                .catch(function(error) {
-                    console.log('Error starting video stream:', error);
-                });
         }
 
-        Promise.all([
-            checkMicrophone(),
-            checkVideo(),
-            checkAudio(),
-            checkScreenSharing(),
-            checkNetworkConnection()
-        ]).then(() => {
-        const nextButton = document.getElementById('nextButton');
-        nextButton.addEventListener('click', function(){
-          
-                accessDialog.classList.add('hidden');
-                photoDialog.style.display = 'block';
-                startVideo();
-                retakeButton.style.display = 'none';
-                continueButton.style.display = 'none';
+    });
+    function startVideo() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+                videoElement.srcObject = stream;
+            })
+            .catch(function (error) {
+                console.log('Error starting video stream:', error);
             });
-        }).catch((error) => {
-            console.error('Error while checking permissions:', error);
+    }
+
+    Promise.all([
+        checkMicrophone(),
+        checkVideo(),
+        checkAudio(),
+        checkScreenSharing(),
+        checkNetworkConnection()
+    ]).then(() => {
+        const nextButton = document.getElementById('nextButton');
+        nextButton.addEventListener('click', function () {
+
+            accessDialog.classList.add('hidden');
+            photoDialog.style.display = 'block';
+            startVideo();
+            retakeButton.style.display = 'none';
+            continueButton.style.display = 'none';
         });
-    </script>
+    }).catch((error) => {
+        console.error('Error while checking permissions:', error);
+    });
+</script>
 </body>
+
 </html>
