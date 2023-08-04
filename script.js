@@ -1,9 +1,7 @@
-const socket = io('http://localhost:5500')
-
-socket.on('hello from server', (...args) => {
-  console.log('hello from server', ...args)
-})
-
+const socket = io('http://localhost:5500');
+    socket.on('hello from server', (...args) => {
+      console.log('hello from server', ...args)
+    })
 let isPopSoundPlayed = false
 let cameraStream = null
 let audioStream = null
@@ -95,7 +93,7 @@ async function detectFace() {
           canvasContainer.style.border = '4px solid red'
           socket.emit('canvas-color', 'red')
         }
-      }, 10000)
+      }, 1000)
     } catch (error) {
       console.error('Error detecting face:', error)
 
@@ -109,83 +107,34 @@ async function detectFace() {
     }
   }
 }
-
-async function checkBackgroundNoise(stream) {
-  try {
-    const audioContext = new AudioContext()
-    const analyser = audioContext.createAnalyser()
-    const microphone = audioContext.createMediaStreamSource(stream)
-    microphone.connect(analyser)
-
-    analyser.fftSize = 256
-    const bufferLength = analyser.frequencyBinCount
-    const dataArray = new Uint8Array(bufferLength)
-    analyser.getByteFrequencyData(dataArray)
-    const averageVolume =
-      dataArray.reduce((acc, val) => acc + val) / bufferLength
-
-    if (averageVolume < 50) {
-      canvasContainer.style.border = '4px solid red'
-      socket.emit('canvas-color', 'red')
-      showError(
-        'Background noise detected. Please ensure you are in a quiet environment to take the test.'
-      )
-      playPopSound()
-    } else {
-      canvasContainer.style.border = '4px solid green'
-      socket.emit('canvas-color', 'green')
+// Function to continuously process audio data and check if someone is talking
+async function startContinuousAudioProcessing() {
+    try {
+      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioContext = new AudioContext();
+      const microphone = audioContext.createMediaStreamSource(audioStream);
+      const audioProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+      microphone.connect(audioProcessor);
+      audioProcessor.connect(audioContext.destination);
+  
+      audioProcessor.onaudioprocess = (e) => {
+        const audioData = e.inputBuffer.getChannelData(0);
+  
+        // Convert the audio data to a Float32Array
+        const dataArray = new Float32Array(audioData);
+  
+        // Send the audio data as a binary stream to the Python script
+        socket.emit('audio-stream', dataArray);
+      };
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      showError('Error processing audio: ' + error.message);
+      canvasContainer.style.border = '4px solid red';
+      socket.emit('canvas-color', 'red');
+      playPopSound();
     }
-
-    analyser.disconnect()
-    microphone.disconnect()
-  } catch (error) {
-    showError('Error accessing the microphone: ' + error.message)
-    canvasContainer.style.border = '4px solid red'
-    socket.emit('canvas-color', 'red')
-    playPopSound()
   }
-}
-
-async function checkMicrophoneStatus() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    const audioContext = new AudioContext()
-    const analyser = audioContext.createAnalyser()
-    const microphone = audioContext.createMediaStreamSource(stream)
-    microphone.connect(analyser)
-
-    analyser.fftSize = 256
-    const bufferLength = analyser.frequencyBinCount
-    const dataArray = new Uint8Array(bufferLength)
-    analyser.getByteFrequencyData(dataArray)
-    const averageVolume =
-      dataArray.reduce((acc, val) => acc + val) / bufferLength
-
-    if (averageVolume < 50) {
-      canvasContainer.style.border = '4px solid red'
-      socket.emit('canvas-color', 'red')
-      showError(
-        'Microphone volume is low or muted. Please increase the volume or unmute the microphone for the test.'
-      )
-      playPopSound()
-    } else {
-      canvasContainer.style.border = '4px solid green'
-      socket.emit('canvas-color', 'green')
-      checkBackgroundNoise(stream)
-      checkNetworkConnection()
-    }
-
-    analyser.disconnect()
-    microphone.disconnect()
-    stream.getTracks().forEach((track) => track.stop())
-  } catch (error) {
-    showError('Error accessing the microphone: ' + error.message)
-    canvasContainer.style.border = '4px solid red'
-    socket.emit('canvas-color', 'red')
-    playPopSound()
-  }
-}
-
+  
 function checkWebcamStatus() {
   if (!video.srcObject || video.srcObject.active === false) {
     showError(
@@ -197,11 +146,12 @@ function checkWebcamStatus() {
   } else {
     canvasContainer.style.border = '4px solid green'
     socket.emit('canvas-color', 'green')
-    checkFaceVisibility()
+    detectFace()
   }
 }
 
 setInterval(checkWebcamStatus, 1000)
+
 
 async function checkNetworkConnection() {
   const networkCircleElement = document.getElementById('network-circle')
@@ -258,7 +208,94 @@ if (!isBrowserSupported()) {
     'Your browser is not supported. Please use a modern browser to take the test.'
   )
 }
-
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      showError('You have switched to a different tab. Webcam and audio processing are paused.');
+      canvasContainer.style.border = '4px solid red';
+      socket.emit('canvas-color', 'red');
+    } else {
+      canvasContainer.style.border = '4px solid green';
+      socket.emit('canvas-color', 'green');
+      detectFace();
+    }
+  });
+  
+  async function checkBackgroundNoise(stream) {
+    try {
+      const audioContext = new AudioContext()
+      const analyser = audioContext.createAnalyser()
+      const microphone = audioContext.createMediaStreamSource(stream)
+      microphone.connect(analyser)
+  
+      analyser.fftSize = 256
+      const bufferLength = analyser.frequencyBinCount
+      const dataArray = new Uint8Array(bufferLength)
+      analyser.getByteFrequencyData(dataArray)
+      const averageVolume =
+        dataArray.reduce((acc, val) => acc + val) / bufferLength
+  
+      if (averageVolume < 50) {
+        canvasContainer.style.border = '4px solid red'
+        socket.emit('canvas-color', 'red')
+        showError(
+          'Background noise detected. Please ensure you are in a quiet environment to take the test.'
+        )
+        playPopSound()
+      } else {
+        canvasContainer.style.border = '4px solid green'
+        socket.emit('canvas-color', 'green')
+      }
+  
+      analyser.disconnect()
+      microphone.disconnect()
+    } catch (error) {
+      showError('Error accessing the microphone: ' + error.message)
+      canvasContainer.style.border = '4px solid red'
+      socket.emit('canvas-color', 'red')
+      playPopSound()
+    }
+  }
+  
+  async function checkMicrophoneStatus() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const audioContext = new AudioContext()
+      const analyser = audioContext.createAnalyser()
+      const microphone = audioContext.createMediaStreamSource(stream)
+      microphone.connect(analyser)
+  
+      analyser.fftSize = 256
+      const bufferLength = analyser.frequencyBinCount
+      const dataArray = new Uint8Array(bufferLength)
+      analyser.getByteFrequencyData(dataArray)
+      const averageVolume =
+        dataArray.reduce((acc, val) => acc + val) / bufferLength
+  
+      if (averageVolume < 50) {
+        canvasContainer.style.border = '4px solid red'
+        socket.emit('canvas-color', 'red')
+        showError(
+          'Microphone volume is low or muted. Please increase the volume or unmute the microphone for the test.'
+        )
+        playPopSound()
+      } else {
+        canvasContainer.style.border = '4px solid green'
+        socket.emit('canvas-color', 'green')
+        checkBackgroundNoise(stream)
+        checkNetworkConnection()
+      }
+  
+      analyser.disconnect()
+      microphone.disconnect()
+      stream.getTracks().forEach((track) => track.stop())
+    } catch (error) {
+      showError('Error accessing the microphone: ' + error.message)
+      canvasContainer.style.border = '4px solid red'
+      socket.emit('canvas-color', 'red')
+      playPopSound()
+    }
+  }
+  
 function checkFullScreenModeSupport() {
   const isFullScreenEnabled =
     document.fullscreenEnabled ||
@@ -276,8 +313,9 @@ function checkFullScreenModeSupport() {
 navigator.mediaDevices
   .getUserMedia({ video: true, audio: true })
   .then((stream) => {
-    checkMicrophoneStatus()
-    checkBackgroundNoise(stream)
+    checkMicrophoneStatus();
+    checkBackgroundNoise(stream);
+    startContinuousAudioProcessing();
     checkNetworkConnection()
     checkFullScreenModeSupport()
   })
