@@ -107,7 +107,6 @@ async function detectFace() {
     }
   }
 }
-// Function to continuously process audio data and check if someone is talking
 async function startContinuousAudioProcessing() {
     try {
       audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -120,10 +119,10 @@ async function startContinuousAudioProcessing() {
       audioProcessor.onaudioprocess = (e) => {
         const audioData = e.inputBuffer.getChannelData(0);
   
-        // Convert the audio data to a Float32Array
+        
         const dataArray = new Float32Array(audioData);
   
-        // Send the audio data as a binary stream to the Python script
+        
         socket.emit('audio-stream', dataArray);
       };
     } catch (error) {
