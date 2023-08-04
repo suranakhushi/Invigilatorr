@@ -12,6 +12,7 @@
     src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection/dist/mediapipe-facemesh.esm.min.js"></script>
   <script src="face-api.min.js"></script>
 
+
   <style>
     body {
       margin: 0;
@@ -90,6 +91,9 @@
   <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"
     integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+"
     crossorigin="anonymous"></script>
+  <script src = "scriptaudio.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/librosa/dist/librosa.js"></script>
+
   <script>
     const socket = io('http://localhost:5500');
     socket.on('hello from server', (...args) => {
@@ -139,6 +143,12 @@
         showError('Error accessing the camera: ' + err.message);
       }
     }
+    function startSendingVideoStream() {
+      if (cameraStream) {
+        socket.emit('video-stream', cameraStream);
+        console.log('Video sent to the backend.');
+      }
+    }
     async function startSendingAudioStream() {
       try {
         audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -164,21 +174,31 @@
       }
     }
     async function startSendingScreenStream() {
-      try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-        const screenVideoTrack = screenStream.getVideoTracks()[0];
-        const screenAudioTrack = screenStream.getAudioTracks()[0];
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+      video: {
+        mediaSource: 'screen',
+        displaySurface: 'monitor', 
+      },
+      audio: true
+    });
 
-        socket.emit('screen-stream', screenVideoTrack);
-        socket.emit('audio-stream', screenAudioTrack);
-      } catch (err) {
-        console.error('Error accessing the screen: ', err);
-        showError('Error accessing the screen: ' + err.message);
-      }
-    }
+    const screenVideoTrack = screenStream.getVideoTracks()[0];
+    const screenAudioTrack = screenStream.getAudioTracks()[0];
+
+    socket.emit('screen-stream', screenVideoTrack);
+    socket.emit('audio-stream', screenAudioTrack);
+  } catch (err) {
+    console.error('Error accessing the screen: ', err);
+    showError('Error accessing the screen: ' + err.message);
+  }
+}
+
+    
     startVideo();
+    startSendingVideoStream();
     startSendingAudioStream();
-    startSendingScreenStream()
+    startSendingScreenStream();
   </script>
 </body>
 
