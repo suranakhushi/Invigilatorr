@@ -330,9 +330,20 @@
 
     retakeButton.addEventListener('click', function () {
         capturedPhoto = null;
-        buttonContainer.style.display = 'none';
-        captureButton.style.display = 'inline-block';
+        buttonContainer.style.display = 'flex';
+        retakeButton.style.display = 'none';
+        continueButton.style.display = 'none';
+        
+        photoContainer.innerHTML = '';
+        photoContainer.appendChild(videoElement);
         startVideo();
+        captureButton.style.display = 'inline-block';
+    });
+    captureButton.addEventListener('click', function () {
+        buttonContainer.style.display = 'flex';
+        retakeButton.style.display = 'inline-block';
+        continueButton.style.display = 'inline-block';
+        captureButton.style.display = 'none';
     });
 
     continueButton.addEventListener('click', function () {
@@ -351,7 +362,6 @@
                 console.log('Error starting video stream:', error);
             });
     }
-
     Promise.all([
         checkMicrophone(),
         checkVideo(),
@@ -373,5 +383,4 @@
     });
 </script>
 </body>
-
 </html>
